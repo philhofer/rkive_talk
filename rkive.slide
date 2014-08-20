@@ -5,6 +5,14 @@ A2B Bikeshare
 @ph_hofer
 phofer@umich.edu
 
+* Follow Along
+
+.link http://github.com/philhofer/rkive_talk
+
+.link http://godoc.org/github.com/philhofer/rkive
+
+.link http://github.com/philhofer/rkive
+
 * Go is a language for DIY-ers
 
 - No generics
@@ -23,6 +31,8 @@ phofer@umich.edu
 
 - Simple for operations (no master, no slave)
 
+.image riak_logo.png
+
 * Good fit for other reasons
 
 - Focus on distributed systems
@@ -35,7 +45,7 @@ phofer@umich.edu
 
 - Focus on correctness
 
-* Why Riak is Great
+* Why Riak Is Easy
 
 * Scalability
 - Just 
@@ -60,7 +70,7 @@ phofer@umich.edu
 - Secondary indexes
 - Links
 
-* Why Riak Sucks
+* Why Riak Is Hard
 
 * Consistency
 - There is none (see: Brewer's Conjecture, a.k.a. The CAP Theorem)
@@ -72,6 +82,16 @@ phofer@umich.edu
 - Now we have 2i (Secondary Indexes) and named links
 - Joins are still a client-side phenomenon
 
+* Tradeoffs
+
+1. Better operations, better QoS, but more development time
+2. Distributed systems are about tradeoffs
+3. Riak is great for some use cases and bad for others, just like SQL
+
+I'm trying to improve #1.
+
+(Riak handles all of our data.)
+
 * rkive
 
 * Impetus
@@ -80,8 +100,13 @@ phofer@umich.edu
 - Reason two: I hate `interface{}`
 - Reason three: I especially hate un-documented `interace{}`
 - Reason four: performance
-- Also: "read-before-write" compliance: 
+- Also: "read-before-write" compliance:
+
 .link http://en.wikipedia.org/wiki/Vector_clock Vector Clocks
+
+Read the docs:
+
+.link http://godoc.org/github.com/philhofer/rkive 
 
 * The Object Interface
 
@@ -94,10 +119,13 @@ phofer@umich.edu
 * CRUD
 
 - Get: 
-       err = rkive.Fetch(o, bucket, key, opts) 
-       info, err = rkive.FetchHead(o, bucket, key, opts)
-       updated, err = rkive.Update(o, opts) 
-       err = rkive.PullHead(o, opts)
+  err = rkive.Fetch(o, bucket, key, opts) 
+  info, err = rkive.FetchHead(o, bucket, key, opts)
+  updated, err = rkive.Update(o, opts) 
+  err = rkive.PullHead(o, opts)  
+  res, err = rkive.IndexLookup("users", "username", "ph_hofer", nil)
+  res, err = rkive.IndexRange("users", "created", 14012340, 14090983, nil)
+
 
 - Store:
 	err = rkive.New(o, bucket, key, opts)
@@ -148,3 +176,13 @@ Remember that API-level applications do much more than talk to a database, so a 
 `PushChangeset` is your friend:
 
 .code chng.go
+
+* The Future
+
+- Riak CRDTs & Riak 2.0
+
+- Memory-backed "cache" buckets
+
+- Your PRs
+
+* Questions?
