@@ -1,0 +1,150 @@
+Go + Riak
+
+Phil Hofer
+A2B Bikeshare
+@ph_hofer
+phofer@umich.edu
+
+* Go is a language for DIY-ers
+
+- No generics
+ 
+- Few builtins
+
+- Few keywords
+
+- Lack of features (simple or nightmarish, depending on who you ask)
+
+* Riak is a database for DIY-ers
+
+- Key-value store (simple or nightmarish, depending on use case)
+ 
+- Object relations are implemented manually
+
+- Simple for operations (no master, no slave)
+
+* Good fit for other reasons
+
+- Focus on distributed systems
+
+- Exposed concurrency
+
+- Simplicity of operations
+
+- Performance
+
+- Focus on correctness
+
+* Why Riak is Great
+
+* Scalability
+- Just 
+       $ riak cluster join
+- Near-linear horizontal scalability
+- No master, no slaves
+- Your operations team will love you
+
+* Fault tolerance
+- Data is replicated accross nodes
+- Nodes operate independently; any node can serve any request
+- "Read Repair" (downed nodes recover themselves)
+
+* Performance
+- Pluggable backends (Bitcask, eLevelDB, memory)
+- Scale actually translates to performance
+- We'll talk more about this later
+
+* (Some More) Features
+- Full-text search (Yokozuna)
+- MapReduce
+- Secondary indexes
+- Links
+
+* Why Riak Sucks
+
+* Consistency
+- There is none (see: Brewer's Conjecture, a.k.a. The CAP Theorem)
+- You can ask for more consistency, but you will (definitionally) see more failures.
+- Merging "siblings" can and should be implemented by the user
+
+* Relationships
+- Originally, none
+- Now we have 2i (Secondary Indexes) and named links
+- Joins are still a client-side phenomenon
+
+* rkive
+
+* Impetus
+- There are other Go/Riak clients out there, why a new one?
+- Reason one: they're unmaintained (yes, all of them)
+- Reason two: I hate `interface{}`
+- Reason three: I especially hate un-documented `interace{}`
+- Reason four: performance
+- Also: "read-before-write" compliance: 
+.link http://en.wikipedia.org/wiki/Vector_clock Vector Clocks
+
+* The Object Interface
+
+.code obj.go
+
+* An Example
+
+.code ex1.go /START OMIT/,/END OMIT/
+
+* CRUD
+
+- Get: 
+       err = rkive.Fetch(o, bucket, key, opts) 
+       info, err = rkive.FetchHead(o, bucket, key, opts)
+       updated, err = rkive.Update(o, opts) 
+       err = rkive.PullHead(o, opts)
+
+- Store:
+	err = rkive.New(o, bucket, key, opts)
+	err = rkive.Store(o, opts)
+	err = rkive.Push(o, opts)
+	err = rkive.PushChangeset(o, chng, opts)
+
+- Delete:
+	err = rkive.Delete(o, opts)
+
+* Some things to notice:
+
+- Key, bucket, secondary indexes, etc. are stored in `*Info`
+- Store and delete operations will return an error if the object has never been read ("read-before-write")
+- Consequently, you can't accidentally forget to include a vector clock with your object
+
+* Handling siblings
+
+.code objm.go
+
+Merged locally on read, conflict overwritten on write. This all happens transparently.
+
+* Implementing relationships
+
+- Seconary Indexes:
+  ob.Info().SetIndex("username", "ph_hofer")
+
+- Links:
+  ob.Info().SetLink("child", "child_bucket", "child_key")
+
+- Your own metadata:
+  ob.Info().SetMeta("key", "value")
+
+* Performance
+
+- About 14000 reads/s or 9000 writes/s on my laptop (single node, small objects)
+- Riak bottlenecks long before the client (which is what we want)
+- 8 allocs (636 B) on read and 5 allocs (754 B) on write
+- Try it yourself
+      $ riak start
+      $ go test -v -tags 'riak' -check.v -bench .
+(You must have secondary indexes enabled.)
+
+Remember that API-level applications do much more than talk to a database, so a smaller resource footprint for DB clients is *always* useful. (HTTP(S) overhead for front-end handlers is unavoidable.)
+
+* Consistency... ?
+
+`PushChangeset` is your friend:
+
+.code chng.go
