@@ -25,11 +25,11 @@ phofer@umich.edu
 
 * Riak is a database for DIY-ers
 
-- Key-value store (simple or nightmarish, depending on use case)
+- Key-value store w/ buckets (simple or nightmarish, depending on use case)
  
-- Object relations are implemented manually
+- Object relations are implemented manually via 2i and links
 
-- Simple for operations (no master, no slave)
+- Simple for operations (no master, no slave, and great tooling)
 
 .image riak_logo.png
 
@@ -41,28 +41,35 @@ phofer@umich.edu
 
 - Simplicity of operations
 
+- Great tooling
+
 - Performance
 
-- Focus on correctness
+- "Correctness"
 
 * Why Riak Is Easy
 
 * Scalability
 - Just 
-       $ riak cluster join
+       $ bin/riak-admin cluster join riak@192.168.1.10
 - Near-linear horizontal scalability
 - No master, no slaves
-- Your operations team will love you
+
+Your operations team will sing your praises.
 
 * Fault tolerance
 - Data is replicated accross nodes
 - Nodes operate independently; any node can serve any request
-- "Read Repair" (downed nodes recover themselves)
+- "Read Repair", "Active Anti-Entropy"
 
 * Performance
-- Pluggable backends (Bitcask, eLevelDB, memory)
-- Scale actually translates to performance
-- We'll talk more about this later
+- Pluggable backends (Bitcask, eLevelDB, RAM)
+- Horizontal Scale -> Performance
+- I'll show you some numbers in a bit
+
+.link http://customer.io/blog/Segment-customer-data-faster.html "Customer.io Gains 6x Speed Improvement Moving to Riak from MongoDB"
+
+.link http://www.meetup.com/San-Francisco-Riak-Meetup/events/64400612/ "Scaling Riak to 25MMops/day at Kiip"
 
 * (Some More) Features
 - Full-text search (Yokozuna)
@@ -100,7 +107,7 @@ I'm trying to improve #1.
 - Reason two: I hate `interface{}`
 - Reason three: I especially hate un-documented `interace{}`
 - Reason four: performance
-- Also: "read-before-write" compliance:
+- Reason five: "read-before-write" compliance:
 
 .link http://en.wikipedia.org/wiki/Vector_clock Vector Clocks
 
@@ -112,7 +119,7 @@ Read the docs:
 
 .code obj.go
 
-* An Example
+* An Example: Creating a New Object
 
 .code ex1.go /START OMIT/,/END OMIT/
 
